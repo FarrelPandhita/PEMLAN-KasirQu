@@ -113,9 +113,9 @@ KasirQu/
 
 ---
 
-## Teknologi & Dukungan Lingkungan Kerja
+## Teknologi 
 
-*   **Inti**: Java Native (JDK 17+)
+*   **Main**: Java Native (JDK 17+)
 *   **Build Tool**: Maven (Dependensi dikelola melalui `pom.xml`)
 *   **Database**: MySQL Server (MySQL Connector/J)
 *   **User Interface**: Java Swing (GUI dirancang menggunakan NetBeans Matisse)
@@ -143,11 +143,4 @@ Sebelum memulai coding, luangkan waktu untuk membaca panduan pengembangan terper
 - [Panduan Setup NetBeans](docs/setup-netbeans.md) - Tips Matisse untuk pengembang antarmuka.
 - [Panduan Setup IntelliJ & VSCode](docs/setup-intellij.md) - Konfigurasi untuk lingkungan selain NetBeans.
 
-## Layanan Bantuan
-Jika Anda mengalami kendala kompilasi, kegagalan koneksi database, atau masalah penggabungan kode:
-1. Baca [Panduan Pemecahan Masalah](docs/troubleshooting.md).
-2. Baca [Aturan AI Agent](docs/ai-agent-rules.md) jika Anda bekerja menggunakan asisten AI.
-3. Hubungi Technical Lead atau Git Maintainer tim Anda.
 
----
-*KasirQu dirancang dan dikelola oleh tim Pemrograman Lanjut. Mari kita bangun basis kode yang bersih dan stabil!*
