@@ -1,8 +1,13 @@
 package com.kasirqu.gui.shared;
 
+import com.kasirqu.facade.InventoryFacade;
+import com.kasirqu.models.Barang;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.math.BigDecimal;
+import java.sql.SQLException;
 
 public class ItemDialogs {
 
@@ -18,7 +23,7 @@ public class ItemDialogs {
     // ══════════════════════════════════════════════════════════
     //  ADD
     // ══════════════════════════════════════════════════════════
-    public static void showAddDialog(JFrame parent) {
+    public static void showAddDialog(JFrame parent, InventoryFacade facade, Runnable onSuccess) {
         JDialog dialog = new JDialog(parent, "Add New Item", true);
         dialog.setSize(420, 380);
         dialog.setLocationRelativeTo(parent);
@@ -27,16 +32,15 @@ public class ItemDialogs {
         p.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         GridBagConstraints gbc = defaultGbc();
 
-        String[] labels = {"Item Number:", "Description:", "Kategori:", "Price:", "Qty / Stok:", "Disc %:", "Min. Stok:"};
-        JComponent[] fields = {
-            new JTextField(20),
-            new JTextField(20),
-            new JComboBox<>(new String[]{"Pakaian", "Minuman", "Makanan", "Sepatu"}),
-            new JTextField(20),
-            new JTextField(20),
-            new JTextField(20),
-            new JTextField(20),
-        };
+        String[] labels = {"Item Number:", "Description:", "Kategori:", "Price:", "Qty / Stok:", "Min. Stok:"};
+        JTextField fKode = new JTextField(20);
+        JTextField fNama = new JTextField(20);
+        JComboBox<String> fKategori = new JComboBox<>(new String[]{"Pakaian", "Minuman", "Makanan", "Sepatu", "Lainnya"});
+        JTextField fHarga = new JTextField(20);
+        JTextField fStok = new JTextField(20);
+        JTextField fMinStok = new JTextField(20);
+
+        JComponent[] fields = {fKode, fNama, fKategori, fHarga, fStok, fMinStok};
 
         for (int i = 0; i < labels.length; i++) {
             gbc.gridx = 0; gbc.gridy = i; gbc.weightx = 0;
@@ -50,7 +54,26 @@ public class ItemDialogs {
         JButton save   = new ActionButton("Add Item", Color.WHITE, new Color(0x1D9E75));
 
         cancel.addActionListener(e -> dialog.dispose());
-        save.addActionListener(e -> dialog.dispose()); // TODO: implement save logic
+        save.addActionListener(e -> {
+            try {
+                Barang b = new Barang();
+                b.setKodeBarang(fKode.getText());
+                b.setNamaBarang(fNama.getText());
+                // Dummy mapping for category based on index
+                b.setIdKategori(fKategori.getSelectedIndex() + 1);
+                b.setHarga(new BigDecimal(fHarga.getText()));
+                b.setStok(Integer.parseInt(fStok.getText()));
+                b.setMinimalStok(Integer.parseInt(fMinStok.getText()));
+                b.setStatus("aktif");
+                
+                facade.createProduct(b);
+                JOptionPane.showMessageDialog(dialog, "Item berhasil ditambahkan!");
+                if (onSuccess != null) onSuccess.run();
+                dialog.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         btns.add(cancel);
         btns.add(save);
@@ -64,7 +87,7 @@ public class ItemDialogs {
     // ══════════════════════════════════════════════════════════
     //  EDIT
     // ══════════════════════════════════════════════════════════
-    public static void showEditDialog(JFrame parent, DefaultTableModel model, int row) {
+    public static void showEditDialog(JFrame parent, DefaultTableModel model, int row, InventoryFacade facade, Runnable onSuccess) {
         if (row < 0) {
             JOptionPane.showMessageDialog(parent,
                 "Pilih baris terlebih dahulu sebelum melakukan edit.",
@@ -77,23 +100,24 @@ public class ItemDialogs {
         dialog.setLocationRelativeTo(parent);
 
         String kode  = model.getValueAt(row, 0).toString();
-        String nama  = model.getValueAt(row, 1).toString();
-        String harga = model.getValueAt(row, 2).toString();
-        String qty   = model.getValueAt(row, 3).toString();
-        String disc  = model.getValueAt(row, 4).toString();
+        Barang b = facade.getProductByCode(kode);
+        if (b == null) {
+            JOptionPane.showMessageDialog(parent, "Barang tidak ditemukan di database!");
+            return;
+        }
 
         JPanel p   = new JPanel(new GridBagLayout());
         p.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
         GridBagConstraints gbc = defaultGbc();
 
-        String[]     lbls = {"Item Number:", "Description:", "Price:", "Qty:", "Disc %:"};
-        JTextField[] flds = {
-            new JTextField(kode,  20),
-            new JTextField(nama,  20),
-            new JTextField(harga, 20),
-            new JTextField(qty,   20),
-            new JTextField(disc,  20),
-        };
+        String[]     lbls = {"Item Number:", "Description:", "Price:", "Qty:"};
+        JTextField fKode = new JTextField(b.getKodeBarang(), 20);
+        fKode.setEditable(false);
+        JTextField fNama = new JTextField(b.getNamaBarang(), 20);
+        JTextField fHarga = new JTextField(b.getHarga().toString(), 20);
+        JTextField fQty = new JTextField(String.valueOf(b.getStok()), 20);
+
+        JTextField[] flds = {fKode, fNama, fHarga, fQty};
 
         for (int i = 0; i < lbls.length; i++) {
             gbc.gridx = 0; gbc.gridy = i; gbc.weightx = 0;
@@ -107,7 +131,19 @@ public class ItemDialogs {
         JButton save   = new ActionButton("Save Changes", Color.WHITE, new Color(0x185FA5));
 
         cancel.addActionListener(e -> dialog.dispose());
-        save.addActionListener(e -> dialog.dispose()); // TODO: implement save logic
+        save.addActionListener(e -> {
+            try {
+                b.setNamaBarang(fNama.getText());
+                b.setHarga(new BigDecimal(fHarga.getText()));
+                b.setStok(Integer.parseInt(fQty.getText()));
+                facade.updateProduct(b);
+                JOptionPane.showMessageDialog(dialog, "Item berhasil diupdate!");
+                if (onSuccess != null) onSuccess.run();
+                dialog.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         btns.add(cancel);
         btns.add(save);
@@ -121,7 +157,7 @@ public class ItemDialogs {
     // ══════════════════════════════════════════════════════════
     //  REMOVE
     // ══════════════════════════════════════════════════════════
-    public static void showRemoveDialog(JFrame parent, DefaultTableModel model, int row) {
+    public static void showRemoveDialog(JFrame parent, DefaultTableModel model, int row, InventoryFacade facade, Runnable onSuccess) {
         if (row < 0) {
             JOptionPane.showMessageDialog(parent,
                 "Pilih baris terlebih dahulu sebelum menghapus.",
@@ -129,8 +165,12 @@ public class ItemDialogs {
             return;
         }
 
-        String nama = model.getValueAt(row, 1).toString();
         String kode = model.getValueAt(row, 0).toString();
+        Barang b = facade.getProductByCode(kode);
+        if (b == null) {
+            JOptionPane.showMessageDialog(parent, "Barang tidak ditemukan di database!");
+            return;
+        }
 
         JDialog dialog = new JDialog(parent, "Hapus Item", true);
         dialog.setSize(360, 200);
@@ -143,7 +183,7 @@ public class ItemDialogs {
         JLabel title = new JLabel("Hapus item ini?", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 15));
 
-        JLabel sub1 = new JLabel(nama, SwingConstants.CENTER);
+        JLabel sub1 = new JLabel(b.getNamaBarang(), SwingConstants.CENTER);
         sub1.setFont(new Font("Arial", Font.BOLD, 14));
 
         JLabel sub2 = new JLabel("Item #" + kode + " — tindakan ini tidak dapat dibatalkan.", SwingConstants.CENTER);
@@ -159,7 +199,16 @@ public class ItemDialogs {
         JButton del    = new ActionButton("Hapus", Color.WHITE, new Color(0xE24B4A));
 
         cancel.addActionListener(e -> dialog.dispose());
-        del.addActionListener(e -> dialog.dispose()); // TODO: implement delete logic
+        del.addActionListener(e -> {
+            try {
+                facade.deleteProduct(b.getIdBarang());
+                JOptionPane.showMessageDialog(dialog, "Item berhasil dihapus!");
+                if (onSuccess != null) onSuccess.run();
+                dialog.dispose();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         btns.add(cancel);
         btns.add(del);

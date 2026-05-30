@@ -60,7 +60,7 @@ public class ItemListPage extends JPanel {
         title.setFont(new Font("Arial", Font.BOLD, 16));
 
         ActionButton btnTambah = new ActionButton("+ Tambah Item", Color.WHITE, new Color(0x1D9E75));
-        btnTambah.addActionListener(e -> ItemDialogs.showAddDialog(getParentFrame()));
+        btnTambah.addActionListener(e -> ItemDialogs.showAddDialog(getParentFrame(), inventoryFacade, this::loadDataFromDB));
 
         header.add(title,     BorderLayout.WEST);
         header.add(btnTambah, BorderLayout.EAST);
@@ -138,8 +138,8 @@ public class ItemListPage extends JPanel {
         ActionButton btnDelete = new ActionButton("Hapus Item",  new Color(0xA32D2D));
         ActionButton btnDetail = new ActionButton("Detail Item", new Color(0x854F0B));
 
-        btnEdit  .addActionListener(e -> ItemDialogs.showEditDialog  (getParentFrame(), itemModel, itemTable.getSelectedRow()));
-        btnDelete.addActionListener(e -> ItemDialogs.showRemoveDialog (getParentFrame(), itemModel, itemTable.getSelectedRow()));
+        btnEdit  .addActionListener(e -> ItemDialogs.showEditDialog  (getParentFrame(), itemModel, itemTable.getSelectedRow(), inventoryFacade, this::loadDataFromDB));
+        btnDelete.addActionListener(e -> ItemDialogs.showRemoveDialog (getParentFrame(), itemModel, itemTable.getSelectedRow(), inventoryFacade, this::loadDataFromDB));
         btnDetail.addActionListener(e -> ItemDialogs.showDetailDialog (getParentFrame(), itemModel, itemTable.getSelectedRow()));
 
         panel.add(btnEdit);
