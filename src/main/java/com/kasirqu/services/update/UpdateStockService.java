@@ -1,5 +1,15 @@
 package com.kasirqu.services.update;
 
 public class UpdateStockService {
-    // TODO: Implement stock deduction/addition logic
+
+    public boolean validateStockUpdate(
+            int currentStock,
+            int qtyChange
+    ) {
+
+        int newStock =
+                currentStock + qtyChange;
+
+        return newStock >= 0;
+    }
 }

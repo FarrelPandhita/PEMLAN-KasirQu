@@ -1,5 +1,16 @@
 package com.kasirqu.services.update;
 
 public class UpdateCartService {
-    // TODO: Implement cart item quantity updates
+
+    public boolean updateItemQty(
+            int idBarang,
+            int qty
+    ) {
+
+        if (idBarang <= 0) {
+            return false;
+        }
+
+        return qty > 0;
+    }
 }
