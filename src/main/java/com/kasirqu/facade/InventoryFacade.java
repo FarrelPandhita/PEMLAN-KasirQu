@@ -20,7 +20,7 @@ import java.util.List;
  *   CREATE → ✅ Fully wired (CreateInventoryService)
  *   READ   → ✅ Fully wired (ReadInventoryService)
  *   UPDATE → ⏳ Stub (waiting for feature/update integration)
- *   DELETE → ⏳ Stub (waiting for feature/delete integration)
+ *   DELETE → ✅ Fully wired (DeleteInventoryService)
  */
 public class InventoryFacade implements InventoryContract {
 
@@ -97,7 +97,6 @@ public class InventoryFacade implements InventoryContract {
 
     @Override
     public boolean deleteProduct(int idBarang) throws SQLException {
-        // TODO: Wire to deleteService.deleteProduct(idBarang) when implemented
         return deleteService.deleteProduct(idBarang);
     }
 }

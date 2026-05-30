@@ -21,7 +21,7 @@ public class ReadInventoryRepository {
                     DatabaseConnection.getConnection();
 
             String sql =
-                    "SELECT * FROM barang LIMIT ? OFFSET ?";
+                    "SELECT * FROM barang WHERE deleted_at IS NULL LIMIT ? OFFSET ?";
 
             PreparedStatement ps =
                     conn.prepareStatement(sql);
