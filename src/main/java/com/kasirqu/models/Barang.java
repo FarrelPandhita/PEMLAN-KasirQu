@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 public class Barang {
     private int idBarang;
     private int idKategori;
+    private String namaKategori; // Transient: from JOIN with kategori table
     private String kodeBarang;
     private String namaBarang;
     private BigDecimal harga;
@@ -22,6 +23,8 @@ public class Barang {
     public void setIdBarang(int idBarang) { this.idBarang = idBarang; }
     public int getIdKategori() { return idKategori; }
     public void setIdKategori(int idKategori) { this.idKategori = idKategori; }
+    public String getNamaKategori() { return namaKategori; }
+    public void setNamaKategori(String namaKategori) { this.namaKategori = namaKategori; }
     public String getKodeBarang() { return kodeBarang; }
     public void setKodeBarang(String kodeBarang) { this.kodeBarang = kodeBarang; }
     public String getNamaBarang() { return namaBarang; }

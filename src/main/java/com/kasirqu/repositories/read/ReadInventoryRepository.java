@@ -21,7 +21,9 @@ public class ReadInventoryRepository {
                     DatabaseConnection.getConnection();
 
             String sql =
-                    "SELECT * FROM barang WHERE deleted_at IS NULL LIMIT ? OFFSET ?";
+                    "SELECT b.*, k.nama_kategori FROM barang b "
+                  + "LEFT JOIN kategori k ON b.id_kategori = k.id_kategori "
+                  + "WHERE b.deleted_at IS NULL LIMIT ? OFFSET ?";
 
             PreparedStatement ps =
                     conn.prepareStatement(sql);
@@ -41,6 +43,10 @@ public class ReadInventoryRepository {
 
                 barang.setIdKategori(
                         rs.getInt("id_kategori")
+                );
+
+                barang.setNamaKategori(
+                        rs.getString("nama_kategori")
                 );
 
                 barang.setKodeBarang(

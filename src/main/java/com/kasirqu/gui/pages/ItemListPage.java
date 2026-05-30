@@ -208,6 +208,7 @@ public class ItemListPage extends JPanel {
     private void populateTable(List<Barang> data) {
         itemModel.setRowCount(0);
         int low = 0, empty = 0;
+        java.util.Set<String> categories = new java.util.HashSet<>();
 
         for (Barang b : data) {
             int stok = b.getStok();
@@ -215,9 +216,8 @@ public class ItemListPage extends JPanel {
             if      (stok == 0)  empty++;
             else if (stok <= b.getMinimalStok())  low++;
 
-            // Assuming category IDs 1-10 are mapped. We don't have the category name in Barang directly without a join.
-            // For now, let's just show "Cat " + idKategori or fetch if possible.
-            String kat = "Kategori " + b.getIdKategori();
+            String kat = b.getNamaKategori() != null ? b.getNamaKategori() : "-";
+            categories.add(kat);
             
             itemModel.addRow(new Object[]{
                 b.getKodeBarang(), 
@@ -225,14 +225,14 @@ public class ItemListPage extends JPanel {
                 kat, 
                 "Rp" + b.getHarga(), 
                 stokLabel, 
-                "0%" // No discount field in Barang
+                "0%"
             });
         }
 
         int total = data.size();
         showingLabel        .setText("Menampilkan " + total + " dari " + currentItems.size() + " item");
         totalItemsCard      .setValue(String.valueOf(currentItems.size()));
-        totalCategoriesCard .setValue("-"); // Category total would need another query
+        totalCategoriesCard .setValue(String.valueOf(categories.size()));
         lowStockCard        .setValue(String.valueOf(low));
         emptyStockCard      .setValue(String.valueOf(empty));
     }
