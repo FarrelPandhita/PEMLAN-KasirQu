@@ -90,7 +90,7 @@ public class ItemListPage extends JPanel {
         toolbar.setBorder(BorderFactory.createEmptyBorder(0, 10, 6, 10));
 
         searchField    = new JTextField(20);
-        categoryFilter = new JComboBox<>(new String[]{"Semua Kategori", "Pakaian", "Minuman", "Makanan", "Sepatu"});
+        categoryFilter = new JComboBox<>(new String[]{"Semua Kategori"});
         stockFilter    = new JComboBox<>(new String[]{"Semua Stok", "Stok Cukup", "Stok Menipis", "Stok Habis"});
 
         searchField.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -199,9 +199,33 @@ public class ItemListPage extends JPanel {
     }
 
     // ── DATA LOADING & FILTER ─────────────────────────────────────
+    private boolean isPopulatingCategories = false;
+
     public void loadDataFromDB() {
         // Load up to 1000 items
         currentItems = inventoryFacade.getProducts(1000, 0);
+
+        // Populate category filter combobox dynamically based on loaded items
+        isPopulatingCategories = true;
+        String selected = (String) categoryFilter.getSelectedItem();
+        categoryFilter.removeAllItems();
+        categoryFilter.addItem("Semua Kategori");
+
+        java.util.Set<String> cats = new java.util.TreeSet<>();
+        for (Barang b : currentItems) {
+            if (b.getNamaKategori() != null && !b.getNamaKategori().trim().isEmpty()) {
+                cats.add(b.getNamaKategori());
+            }
+        }
+        for (String c : cats) {
+            categoryFilter.addItem(c);
+        }
+
+        if (selected != null) {
+            categoryFilter.setSelectedItem(selected);
+        }
+        isPopulatingCategories = false;
+
         populateTable(currentItems);
     }
 
@@ -238,26 +262,29 @@ public class ItemListPage extends JPanel {
     }
 
     private void applyFilter() {
+        if (isPopulatingCategories) return;
+
         String q       = searchField.getText().toLowerCase().trim();
-        // Category filter is hardcoded in UI ("Semua Kategori", "Pakaian" etc)
-        // Since we only have ID in Barang, filtering by exact category string name is tricky without mapping.
-        // For now, we skip category filter or map it if we know the IDs.
+        String catSel  = (String) categoryFilter.getSelectedItem();
         int stockSel = stockFilter.getSelectedIndex();
 
         List<Barang> filtered = new ArrayList<>();
         for (Barang b : currentItems) {
             String nama = b.getNamaBarang().toLowerCase();
             String kode = b.getKodeBarang().toLowerCase();
+            String kat  = b.getNamaKategori();
             int    stok = b.getStok();
             int minStok = b.getMinimalStok();
 
             boolean matchQ   = q.isEmpty() || nama.contains(q) || kode.contains(q);
+            boolean matchCat = catSel == null || catSel.equals("Semua Kategori") 
+                || (kat != null && kat.equalsIgnoreCase(catSel));
             boolean matchStk = stockSel == 0
                 || (stockSel == 1 && stok > minStok)
                 || (stockSel == 2 && stok > 0 && stok <= minStok)
                 || (stockSel == 3 && stok == 0);
 
-            if (matchQ && matchStk) {
+            if (matchQ && matchCat && matchStk) {
                 filtered.add(b);
             }
         }
