@@ -23,7 +23,7 @@ public class TestIntegration {
             newBarang.setIdKategori(1); // Assuming 1 exists (e.g. Makanan/Pakaian)
 
             int idBarang = inventoryFacade.createProduct(newBarang);
-            System.out.println("✅ Product created with ID: " + idBarang + ", Kode: " + newBarang.getKodeBarang());
+            System.out.println("[SUCCESS] Product created with ID: " + idBarang + ", Kode: " + newBarang.getKodeBarang());
 
             // 2. Read Data
             System.out.println("\n[2] Testing READ...");
@@ -32,11 +32,11 @@ public class TestIntegration {
             for (Barang b : allProducts) {
                 if (b.getIdBarang() == idBarang) {
                     found = true;
-                    System.out.println("✅ Found created product in database: " + b.getNamaBarang() + " (Stok: " + b.getStok() + ")");
+                    System.out.println("[SUCCESS] Found created product in database: " + b.getNamaBarang() + " (Stok: " + b.getStok() + ")");
                 }
             }
             if (!found) {
-                System.err.println("❌ Failed to find product after creation.");
+                System.err.println("[FAILED] Failed to find product after creation.");
             }
 
             // 3. Update Stock (via Create module)
@@ -44,27 +44,27 @@ public class TestIntegration {
             inventoryFacade.increaseStock(idBarang, 5);
             Barang updatedBarang = inventoryFacade.getProductByCode(newBarang.getKodeBarang());
             if (updatedBarang != null && updatedBarang.getStok() == 15) {
-                System.out.println("✅ Stock updated successfully to: " + updatedBarang.getStok());
+                System.out.println("[SUCCESS] Stock updated successfully to: " + updatedBarang.getStok());
             } else {
-                System.err.println("❌ Failed to update stock.");
+                System.err.println("[FAILED] Failed to update stock.");
             }
 
             // 4. Delete Data
             System.out.println("\n[4] Testing DELETE...");
             boolean deleted = inventoryFacade.deleteProduct(idBarang);
             if (deleted) {
-                System.out.println("✅ Product soft-deleted successfully.");
+                System.out.println("[SUCCESS] Product soft-deleted successfully.");
             } else {
-                System.err.println("❌ Failed to delete product.");
+                System.err.println("[FAILED] Failed to delete product.");
             }
 
             // 5. Read Data Again (should not find it because of deleted_at IS NULL filter)
             System.out.println("\n[5] Testing READ AFTER DELETE...");
             Barang deletedBarang = inventoryFacade.getProductByCode(newBarang.getKodeBarang());
             if (deletedBarang == null) {
-                System.out.println("✅ Product no longer appears in READ results (Filtered successfully).");
+                System.out.println("[SUCCESS] Product no longer appears in READ results (Filtered successfully).");
             } else {
-                System.err.println("❌ Product still appears in READ results!");
+                System.err.println("[FAILED] Product still appears in READ results!");
             }
 
         } catch (SQLException e) {
