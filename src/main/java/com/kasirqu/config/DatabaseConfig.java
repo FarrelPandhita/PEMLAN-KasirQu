@@ -1,18 +1,43 @@
 package com.kasirqu.config;
 
 /**
- * Holds database configuration properties loaded from .env.
- * Used by DatabaseConnection to construct the JDBC URL.
+ * Holds database configuration properties loaded EXCLUSIVELY from .env file.
+ * No default values — .env MUST exist and contain all required keys.
  *
- * All values are read once at class-load time via EnvLoader.
+ * Setup:
+ *   1. Copy .env.example → .env
+ *   2. Fill in your local credentials
+ *   3. If .env is missing, the app will crash with a clear error message.
  */
 public class DatabaseConfig {
 
-    public static final String DB_HOST     = EnvLoader.get("DB_HOST",     "localhost");
-    public static final String DB_PORT     = EnvLoader.get("DB_PORT",     "3306");
-    public static final String DB_NAME     = EnvLoader.get("DB_NAME",     "db_kasir_dev");
-    public static final String DB_USER     = EnvLoader.get("DB_USER",     "root");
-    public static final String DB_PASSWORD = EnvLoader.get("DB_PASSWORD", "");
+    public static final String DB_HOST;
+    public static final String DB_PORT;
+    public static final String DB_NAME;
+    public static final String DB_USER;
+    public static final String DB_PASSWORD;
+
+    static {
+        DB_HOST     = requireEnv("DB_HOST");
+        DB_PORT     = requireEnv("DB_PORT");
+        DB_NAME     = requireEnv("DB_NAME");
+        DB_USER     = requireEnv("DB_USER");
+        DB_PASSWORD = requireEnv("DB_PASSWORD");
+    }
+
+    /**
+     * Reads a required environment variable. Fails fast if missing.
+     */
+    private static String requireEnv(String key) {
+        String value = EnvLoader.get(key);
+        if (value == null || value.trim().isEmpty()) {
+            throw new RuntimeException(
+                "[CONFIG ERROR] Variabel '" + key + "' tidak ditemukan. "
+                + "Pastikan file .env sudah dibuat dari .env.example dan semua key terisi."
+            );
+        }
+        return value;
+    }
 
     /**
      * Builds the full JDBC URL from the config properties.
