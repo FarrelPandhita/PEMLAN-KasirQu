@@ -11,8 +11,8 @@ public class SoftDelete {
     public boolean softDeleteKategori(int idKategori) {
         String sql = "UPDATE kategori SET deleted_at = CURRENT_TIMESTAMP WHERE id_kategori = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        Connection conn = DatabaseConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idKategori);
 
@@ -26,3 +26,4 @@ public class SoftDelete {
         }
     }
 }
+
