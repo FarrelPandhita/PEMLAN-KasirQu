@@ -17,10 +17,10 @@ import java.util.List;
  * Architecture: GUI → InventoryFacade → [Create|Read|Update|Delete]InventoryService → Repository → DB
  *
  * Status:
- *   CREATE → ✅ Fully wired (CreateInventoryService)
- *   READ   → ✅ Fully wired (ReadInventoryService)
- *   UPDATE → ⏳ Stub (waiting for feature/update integration)
- *   DELETE → ✅ Fully wired (DeleteInventoryService)
+ *   CREATE -- Fully wired (CreateInventoryService)
+ *   READ   -- Fully wired (ReadInventoryService)
+ *   UPDATE -- Fully wired (UpdateInventoryService)
+ *   DELETE -- Fully wired (DeleteInventoryService)
  */
 public class InventoryFacade implements InventoryContract {
 
@@ -36,9 +36,9 @@ public class InventoryFacade implements InventoryContract {
         this.deleteService = new DeleteInventoryService();
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // CREATE — Delegated to CreateInventoryService ✅
-    // ═══════════════════════════════════════════════════════════
+    // ===================================================================
+    // CREATE -- Delegated to CreateInventoryService
+    // ===================================================================
 
     @Override
     public int createProduct(Barang barang) throws SQLException {
@@ -50,9 +50,9 @@ public class InventoryFacade implements InventoryContract {
         createService.increaseStock(idBarang, qty);
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // READ — Delegated to ReadInventoryService ✅
-    // ═══════════════════════════════════════════════════════════
+    // ===================================================================
+    // READ -- Delegated to ReadInventoryService
+    // ===================================================================
 
     @Override
     public Barang getProductByCode(String code) {
@@ -81,19 +81,18 @@ public class InventoryFacade implements InventoryContract {
         return readService.getTotalProductCount();
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // UPDATE — Stub ⏳ (wire when feature/update is ready)
-    // ═══════════════════════════════════════════════════════════
+    // ===================================================================
+    // UPDATE -- Delegated to UpdateInventoryService
+    // ===================================================================
 
     @Override
     public boolean updateProduct(Barang barang) throws SQLException {
-        // TODO: Wire to updateService.updateProduct(barang) when implemented
-        return updateService.updateProduct(barang);
+        return updateService.updateBarang(barang);
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // DELETE — Stub ⏳ (wire when feature/delete is ready)
-    // ═══════════════════════════════════════════════════════════
+    // ===================================================================
+    // DELETE -- Delegated to DeleteInventoryService
+    // ===================================================================
 
     @Override
     public boolean deleteProduct(int idBarang) throws SQLException {

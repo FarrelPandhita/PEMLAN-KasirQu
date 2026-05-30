@@ -49,8 +49,32 @@ public class TestIntegration {
                 System.err.println("[FAILED] Failed to update stock.");
             }
 
-            // 4. Delete Data
-            System.out.println("\n[4] Testing DELETE...");
+            // 4. Update Product (via Update module)
+            System.out.println("\n[4] Testing UPDATE...");
+            Barang toUpdate = inventoryFacade.getProductByCode(newBarang.getKodeBarang());
+            if (toUpdate != null) {
+                toUpdate.setNamaBarang("testing-blablabla UPDATED");
+                toUpdate.setHarga(new BigDecimal("25000"));
+                boolean updateResult = inventoryFacade.updateProduct(toUpdate);
+                if (updateResult) {
+                    Barang afterUpdate = inventoryFacade.getProductByCode(newBarang.getKodeBarang());
+                    if (afterUpdate != null
+                            && afterUpdate.getNamaBarang().equals("testing-blablabla UPDATED")
+                            && afterUpdate.getHarga().compareTo(new BigDecimal("25000")) == 0) {
+                        System.out.println("[SUCCESS] Product updated: nama=" + afterUpdate.getNamaBarang()
+                                + ", harga=" + afterUpdate.getHarga());
+                    } else {
+                        System.err.println("[FAILED] Product data mismatch after update.");
+                    }
+                } else {
+                    System.err.println("[FAILED] updateProduct returned false.");
+                }
+            } else {
+                System.err.println("[FAILED] Could not find product to update.");
+            }
+
+            // 5. Delete Data
+            System.out.println("\n[5] Testing DELETE...");
             boolean deleted = inventoryFacade.deleteProduct(idBarang);
             if (deleted) {
                 System.out.println("[SUCCESS] Product soft-deleted successfully.");
@@ -58,8 +82,8 @@ public class TestIntegration {
                 System.err.println("[FAILED] Failed to delete product.");
             }
 
-            // 5. Read Data Again (should not find it because of deleted_at IS NULL filter)
-            System.out.println("\n[5] Testing READ AFTER DELETE...");
+            // 6. Read Data Again (should not find it because of deleted_at IS NULL filter)
+            System.out.println("\n[6] Testing READ AFTER DELETE...");
             Barang deletedBarang = inventoryFacade.getProductByCode(newBarang.getKodeBarang());
             if (deletedBarang == null) {
                 System.out.println("[SUCCESS] Product no longer appears in READ results (Filtered successfully).");
