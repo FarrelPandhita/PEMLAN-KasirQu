@@ -4,6 +4,9 @@ import com.kasirqu.gui.shared.ActionButton;
 import com.kasirqu.gui.shared.ItemDialogs;
 import com.kasirqu.gui.shared.StatCard;
 
+import com.kasirqu.facade.InventoryFacade;
+import com.kasirqu.models.Barang;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -12,21 +15,8 @@ import java.util.List;
 
 public class ItemListPage extends JPanel {
 
-    // ── Sample data ───────────────────────────────────────────
-    private final Object[][] storeItems = {
-        {"5562", "Megan T Shirt",   "Pakaian",  "15.29", "24", "10"},
-        {"5563", "Bottle Drink",    "Minuman",  "2.96",  "52", "10"},
-        {"5564", "Snack Food",      "Makanan",  "2.96",  "3",  "10"},
-        {"0001", "Running Shoes",   "Sepatu",   "45.00", "8",  "0"},
-        {"0002", "Polo Shirt",      "Pakaian",  "18.50", "15", "5"},
-        {"0003", "Mineral Water",   "Minuman",  "1.20",  "0",  "0"},
-        {"0004", "Chocolate Bar",   "Makanan",  "3.50",  "40", "0"},
-        {"0005", "Sport Sandals",   "Sepatu",   "22.00", "4",  "15"},
-        {"0006", "Hoodie Jacket",   "Pakaian",  "35.00", "9",  "0"},
-        {"0007", "Energy Drink",    "Minuman",  "4.50",  "28", "0"},
-        {"0008", "Instant Noodle",  "Makanan",  "1.80",  "67", "0"},
-        {"0009", "Casual Sneakers", "Sepatu",   "55.00", "6",  "10"},
-    };
+    private final InventoryFacade inventoryFacade;
+    private List<Barang> currentItems = new ArrayList<>();
 
     // ── Components ────────────────────────────────────────────
     private JTable itemTable;
@@ -45,6 +35,8 @@ public class ItemListPage extends JPanel {
 
     // ──────────────────────────────────────────────────────────
     public ItemListPage() {
+        inventoryFacade = new InventoryFacade();
+
         setLayout(new BorderLayout(0, 0));
 
         JPanel northStack = new JPanel(new BorderLayout());
@@ -56,7 +48,7 @@ public class ItemListPage extends JPanel {
         add(buildCenterPanel(),  BorderLayout.CENTER);
         add(buildFooter(),       BorderLayout.SOUTH);
 
-        populateTable(storeItems);
+        loadDataFromDB();
     }
 
     // ── HEADER ────────────────────────────────────────────────
@@ -197,7 +189,7 @@ public class ItemListPage extends JPanel {
         JButton btnRefresh = new JButton("Refresh");
         btnExport .setFont(new Font("Arial", Font.PLAIN, 12));
         btnRefresh.setFont(new Font("Arial", Font.PLAIN, 12));
-        btnRefresh.addActionListener(e -> populateTable(storeItems));
+        btnRefresh.addActionListener(e -> loadDataFromDB());
         footerBtns.add(btnExport);
         footerBtns.add(btnRefresh);
 
@@ -206,62 +198,71 @@ public class ItemListPage extends JPanel {
         return footer;
     }
 
-    // ── POPULATE & FILTER ─────────────────────────────────────
-    private void populateTable(Object[][] data) {
+    // ── DATA LOADING & FILTER ─────────────────────────────────────
+    public void loadDataFromDB() {
+        // Load up to 1000 items
+        currentItems = inventoryFacade.getProducts(1000, 0);
+        populateTable(currentItems);
+    }
+
+    private void populateTable(List<Barang> data) {
         itemModel.setRowCount(0);
         int low = 0, empty = 0;
 
-        for (Object[] row : data) {
-            int    stok      = Integer.parseInt(row[4].toString());
-            String stokLabel = stok == 0 ? "Habis" : stok <= 5 ? "Menipis" : String.valueOf(stok);
+        for (Barang b : data) {
+            int stok = b.getStok();
+            String stokLabel = stok == 0 ? "Habis" : stok <= b.getMinimalStok() ? "Menipis" : String.valueOf(stok);
             if      (stok == 0)  empty++;
-            else if (stok <= 5)  low++;
-            itemModel.addRow(new Object[]{row[0], row[1], row[2], "$" + row[3], stokLabel, row[5] + "%"});
+            else if (stok <= b.getMinimalStok())  low++;
+
+            // Assuming category IDs 1-10 are mapped. We don't have the category name in Barang directly without a join.
+            // For now, let's just show "Cat " + idKategori or fetch if possible.
+            String kat = "Kategori " + b.getIdKategori();
+            
+            itemModel.addRow(new Object[]{
+                b.getKodeBarang(), 
+                b.getNamaBarang(), 
+                kat, 
+                "Rp" + b.getHarga(), 
+                stokLabel, 
+                "0%" // No discount field in Barang
+            });
         }
 
-        int total = data.length;
-        showingLabel        .setText("Menampilkan " + total + " dari " + storeItems.length + " item");
-        totalItemsCard      .setValue(String.valueOf(storeItems.length));
-        totalCategoriesCard .setValue("4");
+        int total = data.size();
+        showingLabel        .setText("Menampilkan " + total + " dari " + currentItems.size() + " item");
+        totalItemsCard      .setValue(String.valueOf(currentItems.size()));
+        totalCategoriesCard .setValue("-"); // Category total would need another query
         lowStockCard        .setValue(String.valueOf(low));
         emptyStockCard      .setValue(String.valueOf(empty));
     }
 
     private void applyFilter() {
         String q       = searchField.getText().toLowerCase().trim();
-        String cat     = categoryFilter.getSelectedIndex() == 0 ? "" : categoryFilter.getSelectedItem().toString();
-        int    stockSel = stockFilter.getSelectedIndex();
+        // Category filter is hardcoded in UI ("Semua Kategori", "Pakaian" etc)
+        // Since we only have ID in Barang, filtering by exact category string name is tricky without mapping.
+        // For now, we skip category filter or map it if we know the IDs.
+        int stockSel = stockFilter.getSelectedIndex();
 
-        List<Object[]> filtered = new ArrayList<>();
-        for (Object[] row : storeItems) {
-            String nama = row[1].toString().toLowerCase();
-            String kode = row[0].toString().toLowerCase();
-            String kat  = row[2].toString();
-            int    stok = Integer.parseInt(row[4].toString());
+        List<Barang> filtered = new ArrayList<>();
+        for (Barang b : currentItems) {
+            String nama = b.getNamaBarang().toLowerCase();
+            String kode = b.getKodeBarang().toLowerCase();
+            int    stok = b.getStok();
+            int minStok = b.getMinimalStok();
 
             boolean matchQ   = q.isEmpty() || nama.contains(q) || kode.contains(q);
-            boolean matchCat = cat.isEmpty() || kat.equals(cat);
             boolean matchStk = stockSel == 0
-                || (stockSel == 1 && stok > 5)
-                || (stockSel == 2 && stok > 0 && stok <= 5)
+                || (stockSel == 1 && stok > minStok)
+                || (stockSel == 2 && stok > 0 && stok <= minStok)
                 || (stockSel == 3 && stok == 0);
 
-            if (matchQ && matchCat && matchStk) filtered.add(row);
+            if (matchQ && matchStk) {
+                filtered.add(b);
+            }
         }
-
-        itemModel.setRowCount(0);
-        int low = 0, empty = 0;
-        for (Object[] row : filtered) {
-            int    stok      = Integer.parseInt(row[4].toString());
-            String stokLabel = stok == 0 ? "Habis" : stok <= 5 ? "Menipis" : String.valueOf(stok);
-            if      (stok == 0)  empty++;
-            else if (stok <= 5)  low++;
-            itemModel.addRow(new Object[]{row[0], row[1], row[2], "$" + row[3], stokLabel, row[5] + "%"});
-        }
-
-        showingLabel  .setText("Menampilkan " + filtered.size() + " dari " + storeItems.length + " item");
-        lowStockCard  .setValue(String.valueOf(low));
-        emptyStockCard.setValue(String.valueOf(empty));
+        
+        populateTable(filtered);
     }
 
     // ── Utility ───────────────────────────────────────────────
